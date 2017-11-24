@@ -11,8 +11,7 @@ using namespace std;
 
 std::stringstream windowInfo;
 
-void hexDump(char *desc, void * addr, int len);
-void bighexdump(void *mem, unsigned int len);
+void hexDump(char *desc, void * addr, int len, int orgAddress);
 
 /*
 Convert strings to wide strings
@@ -53,8 +52,16 @@ BOOL CALLBACK WinPropProc(HWND hwndSubclass, LPTSTR lpszString, HANDLE hData, UL
 		std::wstring stemp = s2ws(strText);
 		propHandle = GetProp(hwndSubclass, (LPCWSTR)stemp.c_str());
 		cout << "Parent: " << hwndSubclass << " Property: " << propHandle << "\n";
-		hexDump("None", &propHandle, 128);
-		//bighexdump(address, 128);
+
+		// Read the memory
+		char buffer[500];
+		int* ptr = reinterpret_cast<int*>((int)propHandle);
+		unsigned long byteRead;
+		char* ptrBuff = buffer;
+
+		int stat = ReadProcessMemory(hwndSubclass, ptr, buffer, 128, &byteRead);
+
+		hexDump("None", &buffer, 128, (unsigned int)propHandle);
 	}
 	return TRUE;
 }
@@ -98,11 +105,11 @@ BOOL CALLBACK enumWindowsProc(__in HWND hWnd, __in LPARAM lParam)
 /*
 Dump memory
 */
-void hexDump(char *desc, void * addr, int len)
+void hexDump(char *desc, void * addr, int len, int orgAddress)
 {
 	int i;
 	unsigned char buff[17];
-	unsigned char *pc = (unsigned char *)addr;
+	unsigned char *pc = (unsigned char *)&addr;
 
 	// Output description if given.
 	if (desc != NULL)
@@ -117,6 +124,7 @@ void hexDump(char *desc, void * addr, int len)
 				printf(" %s\n", buff);
 
 			// Output the offset.
+			cout << (unsigned int*)orgAddress + i;
 			printf(" %04x ", i);
 		}
 		// Now the hex code for the specific character.
