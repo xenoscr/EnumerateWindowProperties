@@ -11,7 +11,8 @@ using namespace std;
 
 std::stringstream windowInfo;
 
-void hexDump(char *desc, void *addr, int len);
+void hexDump(char *desc, void * addr, int len);
+void bighexdump(void *mem, unsigned int len);
 
 /*
 Convert strings to wide strings
@@ -39,6 +40,7 @@ BOOL CALLBACK WinPropProc(HWND hwndSubclass, LPTSTR lpszString, HANDLE hData, UL
 	string strText;
 	static int nProp = 1;
 	HANDLE propHandle;
+	//unsigned int *propPtr;
 
 	char szBuf[MAX_PATH] = { 0 };
 	GlobalGetAtomNameA(atmText, szBuf, _countof(szBuf));
@@ -52,6 +54,7 @@ BOOL CALLBACK WinPropProc(HWND hwndSubclass, LPTSTR lpszString, HANDLE hData, UL
 		propHandle = GetProp(hwndSubclass, (LPCWSTR)stemp.c_str());
 		cout << "Parent: " << hwndSubclass << " Property: " << propHandle << "\n";
 		hexDump("None", &propHandle, 128);
+		//bighexdump(address, 128);
 	}
 	return TRUE;
 }
@@ -95,11 +98,11 @@ BOOL CALLBACK enumWindowsProc(__in HWND hWnd, __in LPARAM lParam)
 /*
 Dump memory
 */
-void hexDump(char *desc, void *addr, int len)
+void hexDump(char *desc, void * addr, int len)
 {
 	int i;
 	unsigned char buff[17];
-	unsigned char *pc = (unsigned char*)addr;
+	unsigned char *pc = (unsigned char *)addr;
 
 	// Output description if given.
 	if (desc != NULL)
@@ -117,16 +120,16 @@ void hexDump(char *desc, void *addr, int len)
 			printf(" %04x ", i);
 		}
 		// Now the hex code for the specific character.
-		printf(" %02x", pc[i]);
+		printf(" %02x", (unsigned char)pc[i]);
 
 		// And store a printable ASCII character for later.
-		if ((pc[i] < 0x20) || (pc[i] > 0x7e))
+		if (((unsigned char)pc[i] < 0x20) || ((unsigned char)pc[i] > 0x7e))
 		{
 			buff[i % 16] = '.';
 		}
 		else
 		{
-			buff[i % 16] = pc[i];
+			buff[i % 16] = (unsigned char)pc[i];
 		}
 
 		buff[(i % 16) + 1] = '\0';
